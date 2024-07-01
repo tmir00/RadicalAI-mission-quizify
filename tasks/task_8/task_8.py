@@ -31,7 +31,7 @@ class QuizGenerator:
 
         self.vectorstore = vectorstore
         self.llm = None
-        self.question_bank = [] # Initialize the question bank to store questions
+        self.question_bank = []
         self.system_template = """
             You are a subject matter expert on the topic: {topic}
             
@@ -41,7 +41,7 @@ class QuizGenerator:
             3. Provide the correct answer for the question from the list of answers as key "answer"
             4. Provide an explanation as to why the answer is correct as key "explanation"
             
-            You must respond as a JSON object with the following structure:
+            You must respond as a JSON object (not in a code block) with the following structure:
             {{
                 "question": "<question>",
                 "choices": [
@@ -66,11 +66,15 @@ class QuizGenerator:
 
         :return: An instance or configuration for the LLM.
         """
-        self.llm = VertexAI(
-            model_name = "gemini-pro",
-            temperature = 0.8, # Increased for less deterministic questions 
-            max_output_tokens = 500
-        )
+        try:
+            self.llm = VertexAI(
+                model_name = "gemini-pro",
+                temperature = 0.7, # Increased for less deterministic questions 
+                max_output_tokens = 150
+            )
+            
+        except Exception as e:
+            print("Failed to initialize VertexAI:", e)
 
     def generate_question_with_vectorstore(self):
         """
@@ -86,7 +90,7 @@ class QuizGenerator:
         from langchain_core.runnables import RunnablePassthrough, RunnableParallel
 
         # Enable a Retriever
-        retriever = self.vectorstore.as_retriever()
+        retriever = self.vectorstore.db.as_retriever()
         
         # Use the system template to create a PromptTemplate
         prompt = PromptTemplate.from_template(self.system_template)
@@ -124,25 +128,22 @@ class QuizGenerator:
         self.question_bank = [] # Reset the question bank
 
         for _ in range(self.num_questions):
-            ##### YOUR CODE HERE #####
-            question_str = # Use class method to generate question
-            
-            ##### YOUR CODE HERE #####
-            try:
-                # Convert the JSON String to a dictionary
-            except json.JSONDecodeError:
-                print("Failed to decode question JSON.")
-                continue  # Skip this iteration if JSON decoding fails
-            ##### YOUR CODE HERE #####
+            for _ in range(20):
+                question_str = self.generate_question_with_vectorstore()
+                try:
+                    question = json.loads(question_str)
+                except json.JSONDecodeError:
+                    print("Failed to decode question JSON.")
+                    continue  # Skip this iteration if JSON decoding fails
 
-            ##### YOUR CODE HERE #####
-            # Validate the question using the validate_question method
-            if self.validate_question(question):
-                print("Successfully generated unique question")
-                # Add the valid and unique question to the bank
-            else:
-                print("Duplicate or invalid question detected.")
-            ##### YOUR CODE HERE #####
+                # Validate the question using the validate_question method
+                if question and self.validate_question(question):
+                    print("Successfully generated unique question")
+                    self.question_bank.append(question)
+                    break
+                else:
+                    print("Duplicate or invalid question detected.")
+                    continue
 
         return self.question_bank
 
@@ -166,11 +167,17 @@ class QuizGenerator:
 
         Note: This method assumes `question` is a valid dictionary and `question_bank` has been properly initialized.
         """
-        ##### YOUR CODE HERE #####
         # Consider missing 'question' key as invalid in the dict object
         # Check if a question with the same text already exists in the self.question_bank
-        ##### YOUR CODE HERE #####
-        return is_unique
+        if 'question' not in question:
+            return False
+
+        question_text = question['question']
+        for existing_question in self.question_bank:
+            if existing_question['question'] == question_text:
+                return False
+
+        return True
 
 
 # Test Generating the Quiz
@@ -178,7 +185,7 @@ if __name__ == "__main__":
     
     embed_config = {
         "model_name": "textembedding-gecko@003",
-        "project": "YOUR-PROJECT-ID-HERE",
+        "project": "sample-mission-422802",
         "location": "us-central1"
     }
     

@@ -9,13 +9,12 @@ from tasks.task_5.task_5 import ChromaCollectionCreator
 from tasks.task_8.task_8 import QuizGenerator
 
 class QuizManager:
-    ##########################################################
+    
     def __init__(self, questions: list):
         """
-        Task: Initialize the QuizManager class with a list of quiz questions.
+        Initialize the QuizManager class with a list of quiz questions.
 
-        Overview:
-        This task involves setting up the `QuizManager` class by initializing it with a list of quiz question objects. Each quiz question object is a dictionary that includes the question text, multiple choice options, the correct answer, and an explanation. The initialization process should prepare the class for managing these quiz questions, including tracking the total number of questions.
+        This involves setting up the `QuizManager` class by initializing it with a list of quiz question objects. Each quiz question object is a dictionary that includes the question text, multiple choice options, the correct answer, and an explanation. The initialization process should prepare the class for managing these quiz questions, including tracking the total number of questions.
 
         Instructions:
         1. Store the provided list of quiz question objects in an instance variable named `questions`.
@@ -24,12 +23,10 @@ class QuizManager:
         Parameters:
         - questions: A list of dictionaries, where each dictionary represents a quiz question along with its choices, correct answer, and an explanation.
 
-        Note: This initialization method is crucial for setting the foundation of the `QuizManager` class, enabling it to manage the quiz questions effectively. The class will rely on this setup to perform operations such as retrieving specific questions by index and navigating through the quiz.
         """
-        ##### YOUR CODE HERE #####
-        pass # Placeholder
-    ##########################################################
-
+        self.questions = questions
+        self.total_questions = len(questions)
+    
     def get_question_at_index(self, index: int):
         """
         Retrieves the quiz question object at the specified index. If the index is out of bounds,
@@ -42,12 +39,10 @@ class QuizManager:
         valid_index = index % self.total_questions
         return self.questions[valid_index]
     
-    ##########################################################
     def next_question_index(self, direction=1):
         """
-        Task: Adjust the current quiz question index based on the specified direction.
+        Adjust the current quiz question index based on the specified direction.
 
-        Overview:
         Develop a method to navigate to the next or previous quiz question by adjusting the `question_index` in Streamlit's session state. This method should account for wrapping, meaning if advancing past the last question or moving before the first question, it should continue from the opposite end.
 
         Instructions:
@@ -58,20 +53,17 @@ class QuizManager:
 
         Parameters:
         - direction: An integer indicating the direction to move in the quiz questions list (1 for next, -1 for previous).
-
-        Note: Ensure that `st.session_state["question_index"]` is initialized before calling this method. This navigation method enhances the user experience by providing fluid access to quiz questions.
         """
-        ##### YOUR CODE HERE #####
-        pass  # Placeholder for implementation
-    ##########################################################
+        current_index = st.session_state['question_index']
+        new_index = (current_index + direction) % self.total_questions
+        st.session_state['question_index'] = new_index
+        
 
-
-# Test Generating the Quiz
 if __name__ == "__main__":
     
     embed_config = {
         "model_name": "textembedding-gecko@003",
-        "project": "YOUR-PROJECT-ID-HERE",
+        "project": "sample-mission-422802",
         "location": "us-central1"
     }
     
@@ -110,27 +102,21 @@ if __name__ == "__main__":
         with st.container():
             st.header("Generated Quiz Question: ")
             
-            # Task 9
-            ##########################################################
-            quiz_manager = # Use our new QuizManager class
-            # Format the question and display
+            quiz_manager = QuizManager(question_bank)
             with st.form("Multiple Choice Question"):
-                ##### YOUR CODE HERE #####
-                index_question = # Use the get_question_at_index method to set the 0th index
-                ##### YOUR CODE HERE #####
+                # Use the get_question_at_index method to set the 0th index.
+                index_question = quiz_manager.get_question_at_index(0)
                 
                 # Unpack choices for radio
                 choices = []
                 for choice in index_question['choices']: # For loop unpack the data structure
-                    ##### YOUR CODE HERE #####
                     # Set the key from the index question 
+                    key = choice['key']
                     # Set the value from the index question
-                    ##### YOUR CODE HERE #####
+                    value = choice['value']
                     choices.append(f"{key}) {value}")
                 
-                ##### YOUR CODE HERE #####
-                # Display the question onto streamlit
-                ##### YOUR CODE HERE #####
+                st.write(index_question["question"])
                 
                 answer = st.radio( # Display the radio button with the choices
                     'Choose the correct answer',
@@ -144,4 +130,3 @@ if __name__ == "__main__":
                         st.success("Correct!")
                     else:
                         st.error("Incorrect!")
-            ##########################################################
